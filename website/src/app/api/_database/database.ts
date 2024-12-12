@@ -7,10 +7,9 @@ export default class MongoConnection {
   private mongoUrl: string;
   private onConnectedCallback: Function;
   private isConnectedBefore = false;
-  private connectionOptions: ConnectionOptions = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  };
+  // private connectionOptions: ConnectionOptions = {
+  //   useUnifiedTopology: true,
+  // };
 
   constructor(mongoUrl: string) {
     this.mongoUrl = mongoUrl;
@@ -28,7 +27,7 @@ export default class MongoConnection {
     if (onConnectedCallback) {
       this.onConnectedCallback = onConnectedCallback;
     }
-    mongoose.connect(this.mongoUrl, this.connectionOptions);
+    mongoose.connect(this.mongoUrl);
     mongoose.set("toJSON", { versionKey: false, virtuals: true });
     mongoose.set("toObject", { versionKey: false, virtuals: true });
   }
