@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 // import hash from "../middleware/hash";
 import { NextRequest, NextResponse } from "next/server";
 import Info from "../model/info";
+import { async } from "./../../../../.next/server/app/api/upload/route";
 
 dotenv.config();
 const uri = process.env.MONGODB_URI;
@@ -18,7 +19,7 @@ mongoConnection.connect(() => {
   console.log("Connected to MongoDB");
 });
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest, res: NextResponse) {
   //   const body = await req.json();
   console.log("yes");
   try {
@@ -68,6 +69,15 @@ export async function POST(req: NextRequest) {
       { message: "Info added successfully" },
       { status: 200 }
     );
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function GET(res: NextResponse) {
+  try {
+    const info = await Info.find();
+    return NextResponse.json(info, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
