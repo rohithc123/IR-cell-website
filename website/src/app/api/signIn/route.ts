@@ -1,8 +1,8 @@
-import { NextResponse, NextRequest } from "next/server";
 import MongoConnection from "../_database/database";
 import dotenv from "dotenv";
 import generateToken from "../middleware/token";
 import hash from "../middleware/hash";
+import Admin from "../model/admin";
 
 dotenv.config();
 const uri = process.env.MONGODB_URI;
@@ -18,14 +18,21 @@ mongoConnection.connect(() => {
 });
 
 export async function POST(req: NextRequest) {
-
   const body = await req.json();
-  let username: string = body.username;
+  let email: string = body.email;
   let password: string = body.password;
 
   let hashedPassword = await hash(password);
-  let token = generateToken(username, password);
-  // console.log(hashedPassword);
 
-  return NextResponse.json({ token: hashedPassword });
+  const user: string = await Admin.find({
+    email: email,
+    password: hashedPassword,
+  });
+
+  if (!user || user.length === 0) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  let token = generateToken(email, password);
+  return NextResponse.json({ token: token }, { status: 200 });
 }
