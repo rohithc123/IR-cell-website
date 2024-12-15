@@ -86,3 +86,17 @@ export async function GET(req: NextRequest, res: NextResponse) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest, res: NextResponse) {
+  try {
+    const body = await req.json();
+    let id = body.id;
+    await Info.findByIdAndDelete(id);
+    return NextResponse.json(
+      { message: "Info deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
