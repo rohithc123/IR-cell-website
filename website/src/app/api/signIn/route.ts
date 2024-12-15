@@ -18,21 +18,31 @@ mongoConnection.connect(() => {
 });
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  let email: string = body.email;
-  let password: string = body.password;
+  
+  //TODO change error handling 
+  try {
+    const body = await req.json();
+    let email: string = body.email;
+    let password: string = body.password;
 
-  let hashedPassword = await hash(password);
+    let hashedPassword = await hash(password);
 
-  const user: string = await Admin.find({
-    email: email,
-    password: hashedPassword,
-  });
+    const user: string = await Admin.find({
+      email: email,
+      password: hashedPassword,
+    });
 
-  if (!user || user.length === 0) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!user || user.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    let token = generateToken(email, password);
+    return NextResponse.json({ token: token }, { status: 200 });
+  } catch (error) {
+    console.error("Error during sign in:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
-
-  let token = generateToken(email, password);
-  return NextResponse.json({ token: token }, { status: 200 });
 }
