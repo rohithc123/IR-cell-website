@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 // import hash from "../middleware/hash";
 import { NextRequest, NextResponse } from "next/server";
 import Info from "../model/info";
-import { async } from "./../../../../.next/server/app/api/upload/route";
 
 dotenv.config();
 const uri = process.env.MONGODB_URI;
@@ -74,9 +73,14 @@ export async function POST(req: NextRequest, res: NextResponse) {
   }
 }
 
-export async function GET(res: NextResponse) {
+export async function GET(req: NextRequest, res: NextResponse) {
+  const filter = req.nextUrl.searchParams.get("name");
+
   try {
-    const info = await Info.find();
+    let info = filter
+      ? await Info.find({ name: { $regex: filter, $options: "i" } })
+      : await Info.find();
+
     return NextResponse.json(info, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
