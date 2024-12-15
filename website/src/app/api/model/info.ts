@@ -3,6 +3,7 @@ import mongoose, { Schema, model, Document } from "mongoose";
 interface Iinfo extends Document {
   name: string;
   //   type: "research_intern";
+  //TODO can add status to find based on deadline
   link: URL;
   location: string;
   stipend: string;
@@ -27,10 +28,10 @@ const infoSchema = new Schema<Iinfo>({
   remarks: { type: String, required: true },
 });
 
-infoSchema.path("link").validate((value: string) => {
-  const urlRegex = /^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/gm;
-  return urlRegex.test(value);
-}, "Invalid URL format");
+// infoSchema.path("link").validate((value: string) => {
+//   const urlRegex = /^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/gm;
+//   return urlRegex.test(value);
+// }, "Invalid URL format");
 
-const Info = mongoose.models.Info || model<Iinfo>("info", infoSchema);
+const Info = mongoose.models.Info || model<Iinfo>("Info", infoSchema);
 export default Info;
