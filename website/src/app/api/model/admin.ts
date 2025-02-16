@@ -1,14 +1,14 @@
 import mongoose, { Schema, model, Document } from "mongoose";
 
-interface IAdmin extends Document {
+interface Iadmin extends Document {
   email: string;
   password: string;
 }
 
-const adminSchema = new Schema<IAdmin>({
+const adminSchema = new Schema<Iadmin>({
   email: { type: String, required: true, match: /.+\@.+\..+/ },
   password: { type: String, required: true },
 });
 
-const Admin = mongoose.models.Admin || model<IAdmin>("Admin", adminSchema);
+const Admin = (mongoose.models && mongoose.models.Admin) || model<Iadmin>("Admin", adminSchema);
 export default Admin;
