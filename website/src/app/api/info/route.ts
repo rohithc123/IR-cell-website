@@ -18,60 +18,6 @@ mongoConnection.connect(() => {
   console.log("Connected to MongoDB");
 });
 
-export async function POST(req: NextRequest, res: NextResponse) {
-  //   const body = await req.json();
-  console.log("yes");
-  try {
-    const body = await req.json();
-    let name: string = body.name;
-    let link: URL = body.link;
-    let location: string = body.location;
-    let stipend: string = body.stipend;
-    let date: Date = body.date;
-    let deadline: Date = body.deadline;
-    let duration: string = body.duration;
-    let eligibility: string = body.eligibility;
-    let college_nomination: "YES" | "NO" = body.college_nomination;
-    let remarks: string = body.remarks;
-
-    //example of the req
-    /*
-    {
-        "name": "Example Name",
-        "link": "https://example.com",
-        "location": "Example Location",
-        "stipend": "1000",
-        "date": "2023-10-01T00:00:00.000Z",
-        "deadline": "2023-10-15T00:00:00.000Z",
-        "duration": "6 months",
-        "eligibility": "Example Eligibility",
-        "college_nomination": "YES",
-        "remarks": "Example Remarks"
-    }
-    */
-
-    const info = new Info({
-      name,
-      link,
-      location,
-      stipend,
-      date,
-      deadline,
-      duration,
-      eligibility,
-      college_nomination,
-      remarks,
-    });
-
-    await info.save();
-    return NextResponse.json(
-      { message: "Info added successfully" },
-      { status: 200 }
-    );
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
 
 export async function GET(req: NextRequest, res: NextResponse) {
   const filter = req.nextUrl.searchParams.get("name");
@@ -87,16 +33,3 @@ export async function GET(req: NextRequest, res: NextResponse) {
   }
 }
 
-export async function DELETE(req: NextRequest, res: NextResponse) {
-  try {
-    const body = await req.json();
-    let id = body.id;
-    await Info.findByIdAndDelete(id);
-    return NextResponse.json(
-      { message: "Info deleted successfully" },
-      { status: 200 }
-    );
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
