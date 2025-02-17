@@ -1,1 +1,7 @@
-{}
+{
+  "recommendations": [
+    "yoavbls.pretty-ts-errors",
+    "gruntfuggly.todo-tree",
+    "postman.postman-for-vscode"
+  ]
+}

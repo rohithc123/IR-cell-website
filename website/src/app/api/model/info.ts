@@ -33,5 +33,5 @@ const infoSchema = new Schema<Iinfo>({
 //   return urlRegex.test(value);
 // }, "Invalid URL format");
 
-const Info = mongoose.models.Info || model<Iinfo>("Info", infoSchema);
+const Info = mongoose.models?.Info || model<Iinfo>("Info", infoSchema);
 export default Info;
