@@ -1,11 +1,13 @@
 import MongoConnection from "../_database/database";
 import dotenv from "dotenv";
 // import generateToken from "../middleware/token";
-import hash from "../middleware/hash";
+import hash from "../services/hash";
 import Admin from "../model/admin";
 import { NextRequest, NextResponse } from "next/server";
+// import fs from "fs";
 
 import jwt from "jsonwebtoken";
+import * as jose from "jose";
 import { cookies } from "next/headers";
 
 dotenv.config();
@@ -39,14 +41,24 @@ async function generateToken(
     password: password,
   };
 
-  // console.log((await cookies()).get("token")?.value);
-  // const allCookies = (await cookies()).getAll();
-  // console.log(allCookies);
-
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const token = jwt.sign(payload, secretKey, { expiresIn: "7d" });
+
+  const ecPublicKey = await jose.importSPKI(
+    process.env.PUBLIC_KEY,
+    "ECDH-ES+A256KW"
+  );
+
+  const token = await new jose.GeneralEncrypt(
+    new TextEncoder().encode(JSON.stringify(payload))
+  )
+    .setProtectedHeader({ enc: "A256GCM" })
+    .addRecipient(ecPublicKey)
+    .setUnprotectedHeader({ alg: "ECDH-ES+A256KW" })
+    .encrypt();
+
   const cookieStore = await cookies();
 
+  console.log(token);
   //TODO specify the domain before production
   await cookieStore.set("token", JSON.stringify(token), {
     httpOnly: process.env.NODE_ENV === "production",

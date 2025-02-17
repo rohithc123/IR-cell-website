@@ -1,9 +1,11 @@
-import MongoConnection from "../../_database/database";
+import { NextRequest, NextResponse } from "next/server";
 import dotenv from "dotenv";
+import { cookies } from "next/headers";
 // import generateToken from "../middleware/token";
 // import hash from "../middleware/hash";
-import { NextRequest, NextResponse } from "next/server";
+import MongoConnection from "../../_database/database";
 import Info from "../../model/info";
+import validateToken from "../../services/validate";
 
 dotenv.config();
 const uri = process.env.MONGODB_URI;
@@ -20,6 +22,15 @@ mongoConnection.connect(() => {
 
 export async function POST(req: NextRequest, res: NextResponse) {
   try {
+    const cookie = (await cookies()).get("token")?.value;
+
+    if (!validateToken(cookie)) {
+      return NextResponse.json(
+        { error: "Unauthorized: Admin not found" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     let name: string = body.name;
     let link: URL = body.link;
@@ -87,6 +98,16 @@ export async function GET(req: NextRequest, res: NextResponse) {
 
 export async function DELETE(req: NextRequest, res: NextResponse) {
   try {
+    const cookie = (await cookies()).get("token")?.value;
+
+    const adminId = req.headers.get("x-admin-id");
+    if (!validateToken(cookie)) {
+      return NextResponse.json(
+        { error: "Unauthorized: Admin not found" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     let id = body.id;
     await Info.findByIdAndDelete(id);
