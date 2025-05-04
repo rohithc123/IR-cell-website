@@ -25,7 +25,7 @@ const dummyData: ProgramInfo[] = [
   {
     _id: '1',
     name: 'Summer Research Program',
-    link: 'https://example.com/program1',
+    link: '/programs/1',
     location: 'MIT, Cambridge, USA',
     stipend: '$3000/month',
     date: '2024-06-01',
@@ -38,7 +38,7 @@ const dummyData: ProgramInfo[] = [
   {
     _id: '2',
     name: 'Global Engineering Internship',
-    link: 'https://example.com/program2',
+    link: '/programs/2',
     location: 'Technical University of Munich, Germany',
     stipend: '1000€/month',
     date: '2024-07-01',
@@ -51,7 +51,7 @@ const dummyData: ProgramInfo[] = [
   {
     _id: '3',
     name: 'Research Exchange Program',
-    link: 'https://example.com/program3',
+    link: '/programs/3',
     location: 'University of Tokyo, Japan',
     stipend: '150000 JPY/month',
     date: '2024-05-15',
@@ -144,6 +144,7 @@ export default function InfoPage() {
                     </div>
                   </div>
                   <div className="mt-4 flex justify-center">
+                    <Link href={program.link}>
                     <Button
                       as="a"
                       href={program.link}
@@ -154,6 +155,7 @@ export default function InfoPage() {
                     >
                       Apply Now
                     </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
