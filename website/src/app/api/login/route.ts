@@ -4,11 +4,10 @@ import dotenv from "dotenv";
 import hash from "../services/hash";
 import Admin from "../model/admin";
 import { NextRequest, NextResponse } from "next/server";
-// import fs from "fs";
+import { cookies } from "next/headers";
 
 import jwt from "jsonwebtoken";
 import * as jose from "jose";
-import { cookies } from "next/headers";
 
 dotenv.config();
 const uri = process.env.MONGODB_URI;
@@ -32,13 +31,12 @@ interface Payload {
 
 async function generateToken(
   id: string,
-  email: string,
-  password: string
+  email: string
+  // password: string
 ): Promise<string> {
   const payload: Payload = {
     _id: id,
     email: email,
-    password: password,
   };
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -58,7 +56,6 @@ async function generateToken(
 
   const cookieStore = await cookies();
 
-  console.log(token);
   //TODO specify the domain before production
   await cookieStore.set("token", JSON.stringify(token), {
     httpOnly: process.env.NODE_ENV === "production",
@@ -67,6 +64,9 @@ async function generateToken(
     sameSite: "lax",
     path: "/",
   });
+
+  // console.log((await cookies()).getAll());
+  // console.log("Token cookie:", (await cookies()).get("token")?.value);
 
   return token;
 
@@ -90,13 +90,13 @@ export async function POST(req: NextRequest) {
     const user: string = await Admin.find({
       email: email,
       password: hashedPassword,
-    });
+    }).select("-password");
 
     if (!user || user.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const token = await generateToken(user[0].id, email, password);
+    const token = await generateToken(user[0].id, email);
 
     //TODO will remove this since we are storing it in cookies
     return NextResponse.json({ message: "Login successful" }, { status: 200 });
