@@ -6,8 +6,7 @@ import Admin from "../model/admin";
 import { NextRequest, NextResponse } from "next/server";
 // import fs from "fs";
 
-import jwt from "jsonwebtoken";
-import * as jose from "jose";
+import { SignJWT } from 'jose';
 import { cookies } from "next/headers";
 
 dotenv.config();
@@ -23,7 +22,7 @@ mongoConnection.connect(() => {
   console.log("Connected to MongoDB");
 });
 
-const secretKey: string = process.env.secretKey as string;
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 
 interface Payload {
   email: string;
@@ -77,33 +76,53 @@ async function generateToken(
   // return token;
 }
 
-export async function POST(req: NextRequest) {
-  //TODO change error handling
+export async function POST(request: Request) {
   try {
-    const body = await req.json();
-    let email: string = body.email;
-    let password: string = body.password;
+    const body = await request.json();
+    const { email, password } = body;
 
-    //TODO send hashed password from the frontend and remove this part
-    let hashedPassword = await hash(password);
+    // Hash the password
+    const hashedPassword = await hash(password);
 
-    const user: string = await Admin.find({
-      email: email,
-      password: hashedPassword,
-    });
+    // Find user in database
+    const user = await Admin.findOne({ email, password: hashedPassword });
 
-    if (!user || user.length === 0) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      );
     }
 
-    const token = await generateToken(user[0].id, email, password);
+    // Create JWT token using jose (Edge-compatible)
+    const token = await new SignJWT({ 
+      userId: user._id,
+      email: user.email 
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('24h')
+      .sign(secretKey);
 
-    //TODO will remove this since we are storing it in cookies
-    return NextResponse.json({ message: "Login successful" }, { status: 200 });
+    // Create the response
+    const response = NextResponse.json({ 
+      success: true,
+      message: 'Login successful'
+    });
+
+    // Set the token cookie
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 86400 // 24 hours
+    });
+
+    return response;
   } catch (error) {
-    console.error("Error during sign in:", error);
+    console.error('Login error:', error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

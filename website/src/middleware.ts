@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import validateToken from "./app/api/services/validate";
+import { jwtVerify } from 'jose';
+
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 
 const protectedRoutes = ["/api/dashboard/info", "/api/logout"];
 const publicRoutes = ["/api/login", "/api/info"];
@@ -14,35 +15,44 @@ interface Decodedcookie {
 
 //TODO xd using hacky way of using true or false if possible change this
 
-export default async function middleware(req: NextRequest, res: NextResponse) {
-  const path = req.nextUrl.pathname;
-  //   console.log(path);
-  const isProtectedRoute = protectedRoutes.includes(path);
-  const isPublicRoute = publicRoutes.includes(path);
+export async function middleware(request: NextRequest) {
+  const token = request.cookies.get('token')?.value;
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
+                    request.nextUrl.pathname.startsWith('/signup');
+  const isDashboardPage = request.nextUrl.pathname.startsWith('/dashboard');
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
 
-  const cookie = (await cookies()).get("token")?.value;
-  // console.log((await cookies()).getAll());
-  //   console.log("Token cookie:", cookie);
-
-  if (isProtectedRoute && (!cookie || cookie == undefined)) {
-    // console.log("yes");
-
-    //TODO if u create a login section it will directly redirect to login page
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
+  // Allow API routes to handle their own authentication
+  if (isApiRoute) {
+    return NextResponse.next();
   }
 
-  //   if (
-  //     isPublicRoute &&
-  //     cookie?._id &&
-  //     !req.nextUrl.pathname.startsWith("/dashboard")
-  //   ) {
-  //     console.log("Working");
-  //     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
-  //   }
+  let isAuthenticated = false;
+
+  if (token) {
+    try {
+      // Verify the JWT token using jose (Edge-compatible)
+      await jwtVerify(token, secretKey);
+      isAuthenticated = true;
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      isAuthenticated = false;
+    }
+  }
+
+  // If trying to access auth pages while logged in, redirect to dashboard
+  if (isAuthPage && isAuthenticated) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // If trying to access protected pages while logged out, redirect to login
+  if (isDashboardPage && !isAuthenticated) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/api/dashboard/:path*"],
+  matcher: ['/dashboard/:path*', '/login', '/signup']
 };
