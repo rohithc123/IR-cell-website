@@ -1,53 +1,33 @@
 "use server";
-import express, { NextRequest, NextResponse, NextFunction } from "express";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import { jwtVerify } from 'jose';
 import Admin from "../model/admin";
-import { cookies } from "next/headers";
-import * as jose from "jose";
+
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 
 interface DecodedToken {
-  _id: string;
+  userId: string;
   email: string;
-  password: string;
   iat: number;
   exp: number;
 }
-async function validateToken(
-  cookie: string,
-  req: NextRequest | express.Request
-): boolean {
-  console.log(cookie);
 
-  if (!cookie || cookie == undefined) {
+async function validateToken(cookie: string): Promise<boolean> {
+  if (!cookie) {
     console.log("No cookie");
     return false;
   }
 
   try {
-    const secretKey = process.env.secretKey;
-
-    // const decoded = jwt.verify(cookie, secretKey) as DecodedToken;
-
-    const ecPrivateKey = await jose.importPKCS8(
-      process.env.PRIVATE_KEY,
-      "ECDH-ES+A256KW"
-    );
-
-    const { plaintext, protectedHeader, additionalAuthenticatedData } =
-      await jose.generalDecrypt(JSON.parse(cookie), ecPrivateKey);
-
-    const decoded = new TextDecoder().decode(plaintext);
-    console.log("Decrypted Payload:", decoded);
-
-    const admin = await Admin.findById(decoded._id);
+    const { payload } = await jwtVerify(cookie, secretKey);
+    const admin = await Admin.findById(payload.userId as string);
+    
     if (!admin) {
       return false;
     }
 
     return true;
   } catch (error) {
-    console.log(error);
+    console.log("Token validation error:", error);
     return false;
   }
 }
