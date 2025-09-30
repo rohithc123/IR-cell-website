@@ -292,15 +292,14 @@ export default function InfoPage() {
                       </div>
                     </div>
                     <div className="mt-4 flex justify-center">
-                      <Button
-                        as="a"
-                        href={program.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:scale-110 bg-[#174869] text-primary-foreground"
-                        variant="primary"
-                      >
-                        Apply Now
+                      <Button asChild className="hover:scale-110 bg-[#174869] hover:bg-[#1a5a7a] text-white">
+                        <a
+                          href={program.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Apply Now
+                        </a>
                       </Button>
                     </div>
                   </CardContent>

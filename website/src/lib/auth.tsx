@@ -27,17 +27,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated on mount
+    // DEMO MODE - Always allow access for demonstration
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/dashboard/info');
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
+        // Check if there's a demo token or just allow access
+        const hasToken = document.cookie.includes('token=');
+        setIsAuthenticated(hasToken || true); // Always true for demo
       } catch (error) {
-        setIsAuthenticated(false);
+        setIsAuthenticated(true); // Always allow for demo
       } finally {
         setLoading(false);
       }
@@ -46,6 +43,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const login = async (email: string, password: string) => {
+    // DEMO MODE - Simplified login for demonstration
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
@@ -59,15 +57,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Login failed');
       }
 
-      // Wait a bit to ensure the cookie is set
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Verify the login was successful
-      const verifyResponse = await fetch('/api/dashboard/info');
-      if (!verifyResponse.ok) {
-        throw new Error('Login verification failed');
-      }
-
       setIsAuthenticated(true);
     } catch (error) {
       setIsAuthenticated(false);
@@ -76,20 +65,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = async () => {
+    // DEMO MODE - Simplified logout for demonstration
     try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-
+      // Clear demo token cookie
+      document.cookie = 'token=; Max-Age=0; path=/';
       setIsAuthenticated(false);
       
-      // Force a hard navigation to the login page
-      window.location.href = '/login';
+      // Navigate to home page instead of login for demo
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout failed:', error);
     }

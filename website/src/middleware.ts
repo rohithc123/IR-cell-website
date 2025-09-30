@@ -16,6 +16,10 @@ interface Decodedcookie {
 //TODO xd using hacky way of using true or false if possible change this
 
 export async function middleware(request: NextRequest) {
+  // TEMPORARILY DISABLED FOR DEMO - Allow all routes without authentication
+  return NextResponse.next();
+  
+  /* ORIGINAL CODE COMMENTED OUT FOR DEMO
   const token = request.cookies.get('token')?.value;
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
                     request.nextUrl.pathname.startsWith('/signup');
@@ -51,6 +55,7 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
+  */
 }
 
 export const config = {

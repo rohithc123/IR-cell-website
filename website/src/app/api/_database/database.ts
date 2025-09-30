@@ -1,6 +1,8 @@
 //TODO: Change password to a more secure password
 //TODO: define the sample env file
 
+// TEMPORARILY DISABLED FOR DEMO - MongoDB connection commented out
+/*
 import mongoose, { ConnectionOptions } from "mongoose";
 
 export default class MongoConnection {
@@ -49,4 +51,32 @@ export default class MongoConnection {
       }, 2000);
     }
   };
+}
+*/
+
+// DEMO MODE - Mock MongoDB connection class
+export default class MongoConnection {
+  private mongoUrl: string;
+  private onConnectedCallback: Function;
+
+  constructor(mongoUrl: string) {
+    this.mongoUrl = mongoUrl;
+    console.log(`DEMO MODE: Simulating MongoDB connection to ${mongoUrl}`);
+  }
+
+  public close(onClosed?: (err: Error | null) => void) {
+    console.log("DEMO MODE: Simulating database connection close");
+    if (onClosed) onClosed(null);
+  }
+
+  public connect(onConnectedCallback?: Function) {
+    console.log("DEMO MODE: Simulating successful MongoDB connection");
+    if (onConnectedCallback) {
+      this.onConnectedCallback = onConnectedCallback;
+      // Simulate successful connection after a brief delay
+      setTimeout(() => {
+        this.onConnectedCallback();
+      }, 100);
+    }
+  }
 }

@@ -1,11 +1,10 @@
+// TEMPORARILY DISABLED FOR DEMO - MongoDB and auth imports commented out
+/*
 import MongoConnection from "../_database/database";
 import dotenv from "dotenv";
 // import generateToken from "../middleware/token";
 import hash from "../services/hash";
 import Admin from "../model/admin";
-import { NextRequest, NextResponse } from "next/server";
-// import fs from "fs";
-
 import { SignJWT } from 'jose';
 import { cookies } from "next/headers";
 
@@ -23,106 +22,54 @@ mongoConnection.connect(() => {
 });
 
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
+*/
 
-interface Payload {
-  email: string;
-  password: string;
-}
+import { NextRequest, NextResponse } from "next/server";
+// import fs from "fs";
 
-async function generateToken(
-  id: string,
-  email: string,
-  password: string
-): Promise<string> {
-  const payload: Payload = {
-    _id: id,
-    email: email,
-    password: password,
-  };
-
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-  const ecPublicKey = await jose.importSPKI(
-    process.env.PUBLIC_KEY,
-    "ECDH-ES+A256KW"
-  );
-
-  const token = await new jose.GeneralEncrypt(
-    new TextEncoder().encode(JSON.stringify(payload))
-  )
-    .setProtectedHeader({ enc: "A256GCM" })
-    .addRecipient(ecPublicKey)
-    .setUnprotectedHeader({ alg: "ECDH-ES+A256KW" })
-    .encrypt();
-
-  const cookieStore = await cookies();
-
-  console.log(token);
-  //TODO specify the domain before production
-  await cookieStore.set("token", JSON.stringify(token), {
-    httpOnly: process.env.NODE_ENV === "production",
-    secure: process.env.NODE_ENV === "production",
-    expires: expiresAt,
-    sameSite: "lax",
-    path: "/",
-  });
-
-  return token;
-
-  // const allCookies = (await cookies()).getAll();
-  // console.log("All cookies:", allCookies);
-
-  // console.log("cookie set");
-  // return token;
-}
+// DEMO CREDENTIALS - Accept any email/password for demo
+const DEMO_ADMIN = {
+  email: "admin@ircell.com",
+  password: "demo123"
+};
 
 export async function POST(request: Request) {
+  // TEMPORARILY DISABLED FOR DEMO - Accept any login for demo purposes
   try {
     const body = await request.json();
     const { email, password } = body;
 
-    // Hash the password
-    const hashedPassword = await hash(password);
+    // For demo, accept any email/password or use demo credentials
+    const isValidDemo = (email && password) || 
+                       (email === DEMO_ADMIN.email && password === DEMO_ADMIN.password);
 
-    // Find user in database
-    const user = await Admin.findOne({ email, password: hashedPassword });
-
-    if (!user) {
+    if (!isValidDemo) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Please provide email and password for demo' },
         { status: 401 }
       );
     }
 
-    // Create JWT token using jose (Edge-compatible)
-    const token = await new SignJWT({ 
-      userId: user._id,
-      email: user.email 
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('24h')
-      .sign(secretKey);
-
-    // Create the response
+    // Create successful response without database or JWT
     const response = NextResponse.json({ 
       success: true,
-      message: 'Login successful'
+      message: 'Login successful (demo mode)',
+      demo: true
     });
 
-    // Set the token cookie
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+    // Set a demo token cookie (just for UI consistency)
+    response.cookies.set('token', 'demo-token-12345', {
+      httpOnly: false, // Allow client-side access for demo
+      secure: false,   // Disable secure for local demo
       sameSite: 'lax',
-      maxAge: 86400 // 24 hours
+      maxAge: 86400    // 24 hours
     });
 
     return response;
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Demo login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Demo mode error' },
       { status: 500 }
     );
   }
